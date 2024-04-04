@@ -3,21 +3,25 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 public class Movies {
     private JFrame frame;
     private JButton input, back, confirm;
     private JPanel backButton, inputButton, formPanel;
     private JComboBox ratingList;
-    private JCheckBox genreList;
+    private JCheckBox genreCheckBox;
     private JTextField titleField;
     private JLabel titleLabel, ratingLabel, genreLabel;
+    private int openEntries = 0;
+    private ArrayList<String> selectedGenres;
 
     public Movies() {
         swingWindow();
@@ -42,7 +46,14 @@ public class Movies {
         input.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                entryForm();
+                if (openEntries == 0) {
+                    openEntries += 1;
+                    entryForm();
+                } else {
+                    JOptionPane.showMessageDialog(frame,
+                            "Please finish current entry before starting a new one.",
+                            "Error!", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -79,27 +90,59 @@ public class Movies {
         // Add genres
         genreLabel = new JLabel("Genre(s):");
         formPanel.add(genreLabel);
+        selectedGenres = new ArrayList<>();
         String[] genres = { "Action", "Adventure", "Animation", "Comedy", "Crime",
                 "Drama", "Fantasy", "Historical", "Horror", "Musical",
                 "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western" };
         for (String genre : genres) {
-            genreList = new JCheckBox(genre);
-            formPanel.add(genreList);
+            genreCheckBox = new JCheckBox(genre);
+            formPanel.add(genreCheckBox);
+            genreCheckBox.addItemListener(e -> {
+                // Check if the checkbox is selected
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    // Add the selected genre to the ArrayList
+                    selectedGenres.add(genreCheckBox.getText());
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    // Remove the deselected genre from the ArrayList
+                    selectedGenres.remove(genreCheckBox.getText());
+                }
+            });
         }
 
         // add confirm button
         confirm = new JButton("Confirm Entry");
         formPanel.add(confirm);
 
-        back.addActionListener(new ActionListener() {
+        confirm.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
 
+                if (titleField.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(formPanel,
+                            "Please Enter a Title",
+                            "Error!", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    addEntry();
+                }
             }
         });
 
         frame.add(formPanel);
         frame.revalidate();
+    }
+
+    public void addEntry() {
+        String title = titleField.getText();
+        String rating = (String) ratingList.getSelectedItem();
+        StringBuilder genresBuilder = new StringBuilder();
+        for (int i = 0; i < selectedGenres.size(); i++) {
+            genresBuilder.append(selectedGenres.get(i)); // Append the genre to the StringBuilder
+            if (i != selectedGenres.size() - 1) { // Add a comma if it's not the last genre
+                genresBuilder.append(", ");
+            }
+        }
+        String genres = genresBuilder.toString();
+        System.out.println(genres);
     }
 
 }
