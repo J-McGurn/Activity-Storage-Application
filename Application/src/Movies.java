@@ -5,27 +5,38 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
+import lib.MySQLAccess;
+
+import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.FlowLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.*;
-import java.util.ArrayList;
+import java.sql.SQLException;
 
 public class Movies {
     private JFrame frame;
     private JButton input, back, confirm;
-    private JPanel backButton, inputButton, formPanel;
-    private JComboBox ratingList;
+    private JPanel backButton, inputButton, formPanel, tablePanel;
+    private JComboBox<String> ratingList;
     private JCheckBox genreCheckBox;
     private JTextField titleField;
     private JLabel titleLabel, ratingLabel, genreLabel;
     private int openEntries = 0;
+    private JTable table;
+    private JScrollPane scrollPane;
 
     public Movies() {
         swingWindow();
         buttons();
+        table();
     }
 
     public void swingWindow() {
@@ -33,7 +44,7 @@ public class Movies {
         frame.setTitle("Movies");
         frame.setSize(600, 600);
         frame.setLocationRelativeTo(null);
-        frame.setLayout(new FlowLayout());
+        frame.setLayout(new BorderLayout());
         frame.setVisible(true);
     }
 
@@ -41,13 +52,15 @@ public class Movies {
         inputButton = new JPanel();
         input = new JButton("Input New Entry");
         inputButton.add(input);
-        frame.add(inputButton);
+        frame.add(inputButton, BorderLayout.NORTH);
 
         input.addActionListener(new ActionListener() {
+            @SuppressWarnings("deprecation")
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (openEntries == 0) {
                     openEntries += 1;
+                    inputButton.hide();
                     entryForm();
                 } else {
                     JOptionPane.showMessageDialog(frame,
@@ -60,7 +73,7 @@ public class Movies {
         backButton = new JPanel();
         back = new JButton("Back");
         backButton.add(back);
-        frame.add(backButton);
+        frame.add(backButton, BorderLayout.SOUTH);
 
         back.addActionListener(new ActionListener() {
             @Override
@@ -69,6 +82,41 @@ public class Movies {
                 new HomePage();
             }
         });
+    }
+
+    public void table() {
+        tablePanel = new JPanel();
+        // tablePanel.setPreferredSize(new Dimension(550, 550));
+
+        String[] columnNames = { "Movie ID", "Title", "Rating", "Genres" };
+
+        try {
+            MySQLAccess dbAccess = new MySQLAccess();
+            Object[][] data = dbAccess.getTableData("movies");
+            table = new JTable(data, columnNames);
+            table.setEnabled(false);
+
+            TableColumnModel columnModel = table.getColumnModel();
+            for (int col = 0; col < table.getColumnCount(); col++) {
+                TableColumn column = columnModel.getColumn(col);
+                int maxWidth = 0;
+                for (int row = 0; row < table.getRowCount(); row++) {
+                    TableCellRenderer renderer = table.getCellRenderer(row, col);
+                    Component comp = table.prepareRenderer(renderer, row, col);
+                    maxWidth = Math.max(comp.getPreferredSize().width, maxWidth);
+                }
+                column.setPreferredWidth(maxWidth); // Add some padding
+            }
+
+            scrollPane = new JScrollPane(table);
+            tablePanel.add(scrollPane// , BorderLayout.CENTER
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        frame.add(tablePanel// , BorderLayout.CENTER
+        );
     }
 
     public void entryForm() {
@@ -82,7 +130,7 @@ public class Movies {
 
         // Add star ratings
         ratingLabel = new JLabel("Rating:");
-        String[] ratings = { "5 Star", "4 Star", "3 Star", "2 Star", "1 Star" };
+        String[] ratings = { "5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star" };
         ratingList = new JComboBox<>(ratings);
         formPanel.add(ratingLabel);
         formPanel.add(ratingList);
@@ -116,7 +164,7 @@ public class Movies {
             }
         });
 
-        frame.add(formPanel);
+        frame.add(formPanel, BorderLayout.NORTH);
         frame.revalidate();
     }
 
@@ -141,6 +189,10 @@ public class Movies {
         }
 
         System.out.println("Selected genres: " + selectedGenres);
+
+        MySQLAccess dbAccess = new MySQLAccess();
+        dbAccess.addMovie(title, rating, selectedGenres);
+
         frame.dispose();
         new Movies();
     }

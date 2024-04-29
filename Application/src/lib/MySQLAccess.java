@@ -1,15 +1,15 @@
 package lib;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.ResultSetMetaData;
+
+import java.util.ArrayList;
+import java.util.Random;
 
 public class MySQLAccess {
-    private Connection connect = null;
-    private Statement statement = null;
-    private PreparedStatement preparedStatement = null;
-    private ResultSet resultSet = null;
 
     /*
      * Create a new class: SQLAccessUrl.java
@@ -33,4 +33,62 @@ public class MySQLAccess {
     SQLAccessUrl myUrl = new SQLAccessUrl();
     String url = myUrl.url();
 
+    public int randomID(String table, String column) {
+        Random random = new Random();
+        int randomID;
+        do {
+            randomID = random.nextInt(Integer.MAX_VALUE); // Generate positive random ID
+        } while (randomID <= 0);
+
+        try (Connection connect = DriverManager.getConnection(url)) {
+            PreparedStatement preparedStatement = connect
+                    .prepareStatement("SELECT * FROM " + table + " WHERE " + column + " = ?");
+            preparedStatement.setInt(1, randomID);
+            ResultSet result = preparedStatement.executeQuery();
+            if (!result.next()) {
+                return randomID;
+            } else {
+                randomID(table, column);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public Object[][] getTableData(String table) {
+        ArrayList<Object> tableData = new ArrayList<>();
+        try (Connection connect = DriverManager.getConnection(url)) {
+            PreparedStatement preparedStatement = connect.prepareStatement("SELECT * FROM " + table);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            while (resultSet.next()) {
+                Object[] row = new Object[columnCount];
+                for (int i = 1; i <= columnCount; i++) {
+                    row[i - 1] = resultSet.getObject(i);
+                }
+                tableData.add(row);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Object[][] data = tableData.toArray(new Object[0][]);
+        return data;
+    }
+
+    public void addMovie(String title, String rating, String genres) {
+        try (Connection connect = DriverManager.getConnection(url)) {
+            PreparedStatement preparedStatement = connect
+                    .prepareStatement("INSERT INTO movies (movieID, title, rating, genres) VALUES (?, ?, ?, ?)");
+            preparedStatement.setInt(1, randomID("movies", "movieID"));
+            preparedStatement.setString(2, title);
+            preparedStatement.setString(3, rating);
+            preparedStatement.setString(4, genres);
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
