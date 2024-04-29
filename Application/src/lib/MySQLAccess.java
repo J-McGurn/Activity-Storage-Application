@@ -65,9 +65,9 @@ public class MySQLAccess {
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnCount = metaData.getColumnCount();
             while (resultSet.next()) {
-                Object[] row = new Object[columnCount];
-                for (int i = 1; i <= columnCount; i++) {
-                    row[i - 1] = resultSet.getObject(i);
+                Object[] row = new Object[columnCount - 1];
+                for (int i = 2; i <= columnCount; i++) {
+                    row[i - 2] = resultSet.getObject(i);
                 }
                 tableData.add(row);
             }
@@ -78,17 +78,24 @@ public class MySQLAccess {
         return data;
     }
 
-    public void addMovie(String title, String rating, String genres) {
+    public boolean addMovie(String title, String rating, String genres) {
         try (Connection connect = DriverManager.getConnection(url)) {
-            PreparedStatement preparedStatement = connect
-                    .prepareStatement("INSERT INTO movies (movieID, title, rating, genres) VALUES (?, ?, ?, ?)");
-            preparedStatement.setInt(1, randomID("movies", "movieID"));
-            preparedStatement.setString(2, title);
-            preparedStatement.setString(3, rating);
-            preparedStatement.setString(4, genres);
-            preparedStatement.executeUpdate();
+            PreparedStatement preparedStatement1 = connect.prepareStatement("SELECT * FROM movies WHERE title = ?");
+            preparedStatement1.setString(1, title);
+            ResultSet resultSet = preparedStatement1.executeQuery();
+            if (!resultSet.next()) {
+                PreparedStatement preparedStatement = connect
+                        .prepareStatement("INSERT INTO movies (movieID, title, rating, genres) VALUES (?, ?, ?, ?)");
+                preparedStatement.setInt(1, randomID("movies", "movieID"));
+                preparedStatement.setString(2, title);
+                preparedStatement.setString(3, rating);
+                preparedStatement.setString(4, genres);
+                preparedStatement.executeUpdate();
+                return true;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 }

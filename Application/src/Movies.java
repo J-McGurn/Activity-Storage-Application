@@ -8,18 +8,25 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 import lib.MySQLAccess;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.*;
-import java.sql.SQLException;
+import java.awt.Color;
+
+import java.util.*;
 
 public class Movies {
     private JFrame frame;
@@ -88,13 +95,17 @@ public class Movies {
         tablePanel = new JPanel();
         // tablePanel.setPreferredSize(new Dimension(550, 550));
 
-        String[] columnNames = { "Movie ID", "Title", "Rating", "Genres" };
+        String[] columnNames = { "Title", "Rating", "Genres" };
 
         try {
             MySQLAccess dbAccess = new MySQLAccess();
             Object[][] data = dbAccess.getTableData("movies");
-            table = new JTable(data, columnNames);
+            DefaultTableModel model = new DefaultTableModel(data, columnNames);
+            table = new JTable(model);
             table.setEnabled(false);
+
+            table.getTableHeader().setBackground(new Color(0, 153, 0));
+            table.setDefaultRenderer(Object.class, new OddEvenRowRenderer());
 
             TableColumnModel columnModel = table.getColumnModel();
             for (int col = 0; col < table.getColumnCount(); col++) {
@@ -109,14 +120,26 @@ public class Movies {
             }
 
             scrollPane = new JScrollPane(table);
-            tablePanel.add(scrollPane// , BorderLayout.CENTER
-            );
+            tablePanel.add(scrollPane);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        frame.add(tablePanel// , BorderLayout.CENTER
-        );
+        frame.add(tablePanel);
+    }
+
+    class OddEvenRowRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                int row, int column) {
+            Component renderer = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            if (row % 2 == 0) {
+                renderer.setBackground(Color.LIGHT_GRAY); // Even rows
+            } else {
+                renderer.setBackground(Color.WHITE); // Odd rows
+            }
+            return renderer;
+        }
     }
 
     public void entryForm() {
@@ -191,7 +214,12 @@ public class Movies {
         System.out.println("Selected genres: " + selectedGenres);
 
         MySQLAccess dbAccess = new MySQLAccess();
-        dbAccess.addMovie(title, rating, selectedGenres);
+        boolean result = dbAccess.addMovie(title, rating, selectedGenres);
+        if (!result) {
+            JOptionPane.showMessageDialog(frame,
+                    "This movie title has already been added.",
+                    "Error!", JOptionPane.ERROR_MESSAGE);
+        }
 
         frame.dispose();
         new Movies();
