@@ -219,10 +219,26 @@ public class Movies {
             JOptionPane.showMessageDialog(frame,
                     "This movie title has already been added.",
                     "Error!", JOptionPane.ERROR_MESSAGE);
-        }
 
-        frame.dispose();
-        new Movies();
+        } else {
+            // Clear the form fields
+            titleField.setText("");
+            ratingList.setSelectedIndex(0);
+            Component[] genreComponents = formPanel.getComponents();
+            for (Component component : genreComponents) {
+                if (component instanceof JCheckBox) {
+                    ((JCheckBox) component).setSelected(false);
+                }
+            }
+
+            // Refresh the table data
+            DefaultTableModel model = (DefaultTableModel) table.getModel();
+            model.setRowCount(0); // Clear existing rows
+            Object[][] data = dbAccess.getTableData("movies");
+            for (Object[] row : data) {
+                model.addRow(row); // Add new rows
+            }
+        }
     }
 
 }
