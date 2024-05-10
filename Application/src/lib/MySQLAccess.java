@@ -98,4 +98,17 @@ public class MySQLAccess {
         }
         return false;
     }
+
+    public boolean deleteEntry(String title, String table) {
+        try (Connection connect = DriverManager.getConnection(url)) {
+            // Enclose the title value in single quotes in the SQL query
+            PreparedStatement preparedStatement = connect.prepareStatement("DELETE FROM " + table + " WHERE title = ?");
+            preparedStatement.setString(1, title);
+            int rowsAffected = preparedStatement.executeUpdate();
+            return rowsAffected > 0; // If rows were affected, return true
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

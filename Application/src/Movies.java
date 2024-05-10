@@ -30,13 +30,8 @@ import java.util.*;
 
 public class Movies {
     private JFrame frame;
-    private JButton input, back, confirm;
-    private JPanel backButton, inputButton, formPanel, tablePanel;
-    private JComboBox<String> ratingList;
-    private JCheckBox genreCheckBox;
-    private JTextField titleField;
-    private JLabel titleLabel, ratingLabel, genreLabel;
-    private int openEntries = 0;
+    private JButton input, delete, back;
+    private JPanel buttonsPanel, tablePanel;
     private JTable table;
     private JScrollPane scrollPane;
 
@@ -52,35 +47,46 @@ public class Movies {
         frame.setSize(600, 600);
         frame.setLocationRelativeTo(null);
         frame.setLayout(new BorderLayout());
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Close application when main window is closed
         frame.setVisible(true);
     }
 
     public void buttons() {
-        inputButton = new JPanel();
+        buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new GridLayout(1, 2));
+
         input = new JButton("Input New Entry");
-        inputButton.add(input);
-        frame.add(inputButton, BorderLayout.NORTH);
+        buttonsPanel.add(input);
 
         input.addActionListener(new ActionListener() {
             @SuppressWarnings("deprecation")
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (openEntries == 0) {
-                    openEntries += 1;
-                    inputButton.hide();
-                    entryForm();
-                } else {
-                    JOptionPane.showMessageDialog(frame,
-                            "Please finish current entry before starting a new one.",
-                            "Error!", JOptionPane.ERROR_MESSAGE);
-                }
+                // Open the entry form window
+                EntryForm entryForm = new EntryForm(frame);
+                entryForm.setVisible(true);
+
+                // Disable main movie window until entry form window is closed
+                frame.setEnabled(false);
             }
         });
 
-        backButton = new JPanel();
+        delete = new JButton("Delete");
+        buttonsPanel.add(delete);
+        frame.add(buttonsPanel, BorderLayout.NORTH);
+
+        delete.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DeleteForm deleteForm = new DeleteForm(frame);
+                deleteForm.setVisible(true);
+
+                frame.setEnabled(false);
+            }
+        });
+
         back = new JButton("Back");
-        backButton.add(back);
-        frame.add(backButton, BorderLayout.SOUTH);
+        frame.add(back, BorderLayout.SOUTH);
 
         back.addActionListener(new ActionListener() {
             @Override
@@ -89,11 +95,11 @@ public class Movies {
                 new HomePage();
             }
         });
+
     }
 
     public void table() {
-        tablePanel = new JPanel();
-        // tablePanel.setPreferredSize(new Dimension(550, 550));
+        tablePanel = new JPanel(new BorderLayout());
 
         String[] columnNames = { "Title", "Rating", "Genres" };
 
@@ -120,12 +126,12 @@ public class Movies {
             }
 
             scrollPane = new JScrollPane(table);
-            tablePanel.add(scrollPane);
+            tablePanel.add(scrollPane, BorderLayout.CENTER);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        frame.add(tablePanel);
+        frame.add(tablePanel, BorderLayout.CENTER);
     }
 
     class OddEvenRowRenderer extends DefaultTableCellRenderer {
@@ -142,103 +148,201 @@ public class Movies {
         }
     }
 
-    public void entryForm() {
-        formPanel = new JPanel();
-        formPanel = new JPanel(new GridLayout(0, 4));
-        // Add title
-        titleLabel = new JLabel("Title:");
-        titleField = new JTextField(20);
-        formPanel.add(titleLabel);
-        formPanel.add(titleField);
+    // EntryForm class for creating the entry form window
+    class EntryForm extends JFrame {
+        private JPanel formPanel;
+        private JButton confirm;
+        private JComboBox<String> ratingList;
+        private JCheckBox genreCheckBox;
+        private JTextField titleField;
+        private JLabel titleLabel, ratingLabel, genreLabel;
 
-        // Add star ratings
-        ratingLabel = new JLabel("Rating:");
-        String[] ratings = { "5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star" };
-        ratingList = new JComboBox<>(ratings);
-        formPanel.add(ratingLabel);
-        formPanel.add(ratingList);
+        public EntryForm(JFrame parentFrame) {
+            setTitle("Add New Entry");
+            setSize(400, 250);
+            setLocationRelativeTo(parentFrame);
+            setResizable(false);
+            setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Dispose entry form window instead of closing entire
+                                                               // application
+            setLayout(new BorderLayout());
 
-        // Add genres
-        genreLabel = new JLabel("Genre(s):");
-        formPanel.add(genreLabel);
-        String[] genres = { "Action", "Adventure", "Animation", "Comedy", "Crime",
-                "Drama", "Fantasy", "Historical", "Horror", "Musical",
-                "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western" };
-        for (String genre : genres) {
-            genreCheckBox = new JCheckBox(genre);
-            formPanel.add(genreCheckBox);
+            formPanel = new JPanel(new GridLayout(0, 2));
+
+            // Add title
+            titleLabel = new JLabel("Title:");
+            titleField = new JTextField(20);
+            formPanel.add(titleLabel);
+            formPanel.add(titleField);
+
+            // Add star ratings
+            ratingLabel = new JLabel("Rating:");
+            String[] ratings = { "5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star" };
+            ratingList = new JComboBox<>(ratings);
+            formPanel.add(ratingLabel);
+            formPanel.add(ratingList);
+
+            // Add genres
+            genreLabel = new JLabel("Genre(s):");
+            formPanel.add(genreLabel);
+            String[] genres = { "Action", "Adventure", "Animation", "Comedy", "Crime",
+                    "Drama", "Fantasy", "Historical", "Horror", "Musical",
+                    "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western" };
+            for (String genre : genres) {
+                genreCheckBox = new JCheckBox(genre);
+                formPanel.add(genreCheckBox);
+            }
+
+            // add confirm button
+            confirm = new JButton("Confirm Entry");
+            confirm.setBackground(Color.GREEN);
+            formPanel.add(confirm);
+
+            confirm.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent event) {
+                    if (titleField.getText().trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(formPanel,
+                                "Please Enter a Title",
+                                "Error!", JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        // Get data from form fields
+                        String title = titleField.getText();
+                        String rating = (String) ratingList.getSelectedItem();
+
+                        StringBuilder selectedGenresBuilder = new StringBuilder();
+                        for (Component component : formPanel.getComponents()) {
+                            if (component instanceof JCheckBox) {
+                                JCheckBox checkBox = (JCheckBox) component;
+                                if (checkBox.isSelected()) {
+                                    selectedGenresBuilder.append(checkBox.getText()).append(", ");
+                                }
+                            }
+                        }
+                        String selectedGenres = selectedGenresBuilder.toString().trim();
+                        if (!selectedGenres.isEmpty()) {
+                            selectedGenres = selectedGenres.substring(0, selectedGenres.length() - 1);
+                        }
+
+                        // Call addEntry method with the data
+                        if (addEntry(title, rating, selectedGenres)) {
+
+                            // Close the entry form window
+                            dispose();
+                            // Enable main movie window
+                            parentFrame.setEnabled(true);
+                        }
+
+                    }
+                }
+            });
+            // Add a WindowListener to handle window closing event
+            addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    // Enable main movie window when entry form window is closed using "X" button
+                    parentFrame.setEnabled(true);
+                }
+            });
+
+            add(formPanel, BorderLayout.CENTER);
         }
 
-        // add confirm button
-        confirm = new JButton("Confirm Entry");
-        formPanel.add(confirm);
+        private Boolean addEntry(String title, String rating, String selectedGenres) {
+            MySQLAccess dbAccess = new MySQLAccess();
+            boolean result = dbAccess.addMovie(title, rating, selectedGenres);
+            if (!result) {
+                JOptionPane.showMessageDialog(this,
+                        "This movie title has already been added.",
+                        "Error!", JOptionPane.ERROR_MESSAGE);
 
-        confirm.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-
-                if (titleField.getText().trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(formPanel,
-                            "Please Enter a Title",
-                            "Error!", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    addEntry();
+            } else {
+                // Refresh the table data
+                DefaultTableModel model = (DefaultTableModel) table.getModel();
+                model.setRowCount(0); // Clear existing rows
+                Object[][] data = dbAccess.getTableData("movies");
+                for (Object[] row : data) {
+                    model.addRow(row); // Add new rows
                 }
             }
-        });
+            return result;
+        }
 
-        frame.add(formPanel, BorderLayout.NORTH);
-        frame.revalidate();
     }
 
-    public void addEntry() {
-        String title = titleField.getText();
-        String rating = (String) ratingList.getSelectedItem();
+    class DeleteForm extends JFrame {
+        private JPanel formPanel;
+        private JLabel titleLabel;
+        private JTextField titleField;
+        private JButton confirm;
 
-        StringBuilder selectedGenresBuilder = new StringBuilder();
-        Component[] components = formPanel.getComponents();
-        for (Component component : components) {
-            if (component instanceof JCheckBox) {
-                JCheckBox checkBox = (JCheckBox) component;
-                if (checkBox.isSelected()) {
-                    // Append selected genre to the StringBuilder
-                    selectedGenresBuilder.append(checkBox.getText()).append(", ");
+        public DeleteForm(JFrame parentFrame) {
+            setTitle("Delete Entry");
+            setSize(400, 100);
+            setLocationRelativeTo(parentFrame);
+            setResizable(false);
+            setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+            formPanel = new JPanel();
+
+            titleLabel = new JLabel("Title: ");
+            titleField = new JTextField(30);
+            formPanel.add(titleLabel);
+            formPanel.add(titleField);
+
+            confirm = new JButton("Confirm Entry");
+            confirm.setBackground(Color.GREEN);
+            formPanel.add(confirm);
+
+            confirm.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (titleField.getText().trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(formPanel,
+                                "Please Enter a Title",
+                                "Error!", JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        String title = titleField.getText();
+
+                        if (deleteEntry(title)) {
+
+                            // Close the entry form window
+                            dispose();
+                            // Enable main movie window
+                            parentFrame.setEnabled(true);
+                        }
+                    }
+                }
+
+            });
+
+            addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    // Enable main movie window when entry form window is closed using "X" button
+                    parentFrame.setEnabled(true);
+                }
+            });
+
+            add(formPanel, BorderLayout.CENTER);
+        }
+
+        private boolean deleteEntry(String title) {
+            MySQLAccess dbAccess = new MySQLAccess();
+            boolean result = dbAccess.deleteEntry(title, "movies");
+            if (!result) {
+                JOptionPane.showMessageDialog(this,
+                        "This movie could not be deleted.",
+                        "Error!", JOptionPane.ERROR_MESSAGE);
+            } else {
+                // Refresh the table data
+                DefaultTableModel model = (DefaultTableModel) table.getModel();
+                model.setRowCount(0); // Clear existing rows
+                Object[][] data = dbAccess.getTableData("movies");
+                for (Object[] row : data) {
+                    model.addRow(row); // Add new rows
                 }
             }
-        }
-        String selectedGenres = selectedGenresBuilder.toString().trim();
-        if (!selectedGenres.isEmpty()) {
-            selectedGenres = selectedGenres.substring(0, selectedGenres.length() - 1);
-        }
-
-        System.out.println("Selected genres: " + selectedGenres);
-
-        MySQLAccess dbAccess = new MySQLAccess();
-        boolean result = dbAccess.addMovie(title, rating, selectedGenres);
-        if (!result) {
-            JOptionPane.showMessageDialog(frame,
-                    "This movie title has already been added.",
-                    "Error!", JOptionPane.ERROR_MESSAGE);
-
-        } else {
-            // Clear the form fields
-            titleField.setText("");
-            ratingList.setSelectedIndex(0);
-            Component[] genreComponents = formPanel.getComponents();
-            for (Component component : genreComponents) {
-                if (component instanceof JCheckBox) {
-                    ((JCheckBox) component).setSelected(false);
-                }
-            }
-
-            // Refresh the table data
-            DefaultTableModel model = (DefaultTableModel) table.getModel();
-            model.setRowCount(0); // Clear existing rows
-            Object[][] data = dbAccess.getTableData("movies");
-            for (Object[] row : data) {
-                model.addRow(row); // Add new rows
-            }
+            return result;
         }
     }
-
 }
