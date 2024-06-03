@@ -99,6 +99,71 @@ public class MySQLAccess {
         return false;
     }
 
+    public boolean addTVShow(String title, String rating, String genres) {
+        try (Connection connect = DriverManager.getConnection(url)) {
+            PreparedStatement preparedStatement1 = connect.prepareStatement("SELECT * FROM tvshows WHERE title = ?");
+            preparedStatement1.setString(1, title);
+            ResultSet resultSet = preparedStatement1.executeQuery();
+            if (!resultSet.next()) {
+                PreparedStatement preparedStatement = connect
+                        .prepareStatement("INSERT INTO tvshows (showID, title, rating, genres) VALUES (?, ?, ?, ?)");
+                preparedStatement.setInt(1, randomID("tvshows", "showID"));
+                preparedStatement.setString(2, title);
+                preparedStatement.setString(3, rating);
+                preparedStatement.setString(4, genres);
+                preparedStatement.executeUpdate();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean addGame(String title, String rating, String platform) {
+        try (Connection connect = DriverManager.getConnection(url)) {
+            PreparedStatement preparedStatement1 = connect.prepareStatement("SELECT * FROM games WHERE title = ?");
+            preparedStatement1.setString(1, title);
+            ResultSet resultSet = preparedStatement1.executeQuery();
+            if (!resultSet.next()) {
+                PreparedStatement preparedStatement = connect
+                        .prepareStatement("INSERT INTO games (gameID, title, rating, platform) VALUES (?, ?, ?, ?)");
+                preparedStatement.setInt(1, randomID("tvshows", "showID"));
+                preparedStatement.setString(2, title);
+                preparedStatement.setString(3, rating);
+                preparedStatement.setString(4, platform);
+                preparedStatement.executeUpdate();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean addBook(String title, String author, String rating, String type) {
+        try (Connection connect = DriverManager.getConnection(url)) {
+            PreparedStatement preparedStatement1 = connect.prepareStatement("SELECT * FROM books WHERE title = ?");
+            preparedStatement1.setString(1, title);
+            ResultSet resultSet = preparedStatement1.executeQuery();
+            if (!resultSet.next()) {
+                PreparedStatement preparedStatement = connect
+                        .prepareStatement(
+                                "INSERT INTO books (bookID, title, author, rating, type) VALUES (?, ?, ?, ?, ?)");
+                preparedStatement.setInt(1, randomID("books", "bookID"));
+                preparedStatement.setString(2, title);
+                preparedStatement.setString(3, author);
+                preparedStatement.setString(4, rating);
+                preparedStatement.setString(5, type);
+                preparedStatement.executeUpdate();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public boolean deleteEntry(String title, String table) {
         try (Connection connect = DriverManager.getConnection(url)) {
             // Enclose the title value in single quotes in the SQL query

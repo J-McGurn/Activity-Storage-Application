@@ -22,6 +22,7 @@ import lib.MySQLAccess;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.*;
 import java.awt.Color;
@@ -54,8 +55,10 @@ public class Movies {
     public void buttons() {
         buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new GridLayout(1, 2));
+        Font buttonFont = new Font("Arial", Font.BOLD, 18);
 
         input = new JButton("Input New Entry");
+        input.setFont(buttonFont);
         buttonsPanel.add(input);
 
         input.addActionListener(new ActionListener() {
@@ -72,6 +75,7 @@ public class Movies {
         });
 
         delete = new JButton("Delete");
+        delete.setFont(buttonFont);
         buttonsPanel.add(delete);
         frame.add(buttonsPanel, BorderLayout.NORTH);
 
@@ -86,6 +90,7 @@ public class Movies {
         });
 
         back = new JButton("Back");
+        back.setFont(buttonFont);
         frame.add(back, BorderLayout.SOUTH);
 
         back.addActionListener(new ActionListener() {
