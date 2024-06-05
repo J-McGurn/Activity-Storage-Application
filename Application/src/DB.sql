@@ -26,9 +26,9 @@
 -- +---------+-----------+----------+----------+-------------+
 -- | bookID  |   title   |  author  |  rating  |    type     |
 -- +---------+-----------+----------+----------+-------------+
--- |    1137 | title 1   | author 1 | 5 Stars  | Fiction     |
--- |    3361 | title 2   | author 2 | 1 Star   | Educational |
--- |    4569 | title 3   | author 3 | 3 Stars  | Non-Fiction |
+-- |    9967 | title 1   | author 1 | 5 Stars  | Fiction     |
+-- |    3333 | title 2   | author 2 | 1 Star   | Educational |
+-- |    1054 | title 3   | author 3 | 3 Stars  | Non-Fiction |
 -- +---------+-----------+----------+----------+-------------+
 
 -- Table creations (Must be inside a DB schema):
